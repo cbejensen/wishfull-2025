@@ -3,7 +3,6 @@ import { TagIcon, Filter, Grid, List, Gift } from 'lucide-react';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { Wish, WishStatus } from '../types';
-import Header from '../components/layout/Header';
 import WishCard from '../components/wishes/WishCard';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';

@@ -35,7 +35,7 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header 
-        onAddWishClick={() => {}} 
+        // onAddWishClick={() => {}} 
         onLoginClick={() => setShowAuth(true)}
         activePage={activePage}
         onNavigate={setActivePage}
