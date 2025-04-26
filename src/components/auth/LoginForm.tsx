@@ -62,20 +62,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
     }
   };
 
-  // For demo purposes, provide a way to login easily
-  const handleDemoLogin = async () => {
-    try {
-      await login('john@example.com', 'password123');
-      if (onSuccess) onSuccess();
-    } catch (error) {
-      setErrors({ 
-        general: 'Invalid e-mail or password'
-      });
-    }
-  };
-
   return (
-    <div className="max-w-md w-full mx-auto p-6 bg-white rounded-lg shadow-md">
+    <div className="max-w-md w-full mx-auto p-6 bg-white rounded-lg">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-gray-800">Welcome back</h2>
         <p className="text-gray-600 mt-2">Sign in to manage your wishlists</p>
@@ -121,18 +109,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
           Sign In
         </Button>
       </form>
-      
-      <div className="mt-6">
-        <Button
-          type="button"
-          variant="outline"
-          size="lg"
-          fullWidth
-          onClick={handleDemoLogin}
-        >
-          Demo Login (Quick Access)
-        </Button>
-      </div>
       
       <div className="mt-6 text-center">
         <p className="text-gray-600">
