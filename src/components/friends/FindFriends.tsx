@@ -2,8 +2,22 @@ import React from 'react';
 import { Search, UserPlus } from 'lucide-react';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
+import type { Dispatch, SetStateAction } from 'react';
+import type { Tables } from '../../types';
 
-export const FindFriends = ({ searchQuery, setSearchQuery, filteredUsers, handleAddFriend }) => {
+interface FindFriendsProps {
+  searchQuery: string;
+  setSearchQuery: Dispatch<SetStateAction<string>>;
+  filteredUsers: Pick<Tables<'profiles'>, 'id' | 'display_name' | 'avatar_url'>[];
+  handleAddFriend: (userId: string) => void;
+}
+
+export const FindFriends: React.FC<FindFriendsProps> = ({
+  searchQuery,
+  setSearchQuery,
+  filteredUsers,
+  handleAddFriend,
+}) => {
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
       <div className="mb-6">

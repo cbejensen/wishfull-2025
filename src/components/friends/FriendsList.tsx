@@ -1,26 +1,46 @@
 import React from 'react';
 import { Users, UserX, Check, X } from 'lucide-react';
 import Button from '../ui/Button';
+import type { FriendWithProfile } from '../../pages/Friends';
 
-export const FriendsList = ({ friends, currentUser, handleRespondToRequest, handleRemoveFriend }) => {
+interface FriendsListProps {
+  friends: FriendWithProfile[];
+  currentUser: { id: string } | null;
+  handleRespondToRequest: (friendId: string, accept: boolean) => void;
+  handleRemoveFriend: (friendId: string) => void;
+}
+
+export const FriendsList: React.FC<FriendsListProps> = ({
+  friends,
+  currentUser,
+  handleRespondToRequest,
+  handleRemoveFriend,
+}) => {
+  // Sort friends: pending requests for the current user appear first
+  const sortedFriends = [...friends].sort((a, b) => {
+    if (a.status === 'pending' && a.friend_id === currentUser?.id) return -1;
+    if (b.status === 'pending' && b.friend_id === currentUser?.id) return 1;
+    return 0;
+  });
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Friends</h2>
 
-      {friends.length > 0 ? (
+      {sortedFriends.length > 0 ? (
         <ul className="divide-y divide-gray-200">
-          {friends.map((friend) => (
+          {sortedFriends.map((friend) => (
             <li key={friend.id} className="py-4 flex items-center justify-between">
               <div className="flex items-center">
                 {friend.profile?.avatar_url ? (
                   <img
                     src={friend.profile.avatar_url}
-                    alt={friend.profile.display_name}
+                    alt={friend.profile.display_name || ''}
                     className="h-10 w-10 rounded-full object-cover"
                   />
                 ) : (
                   <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-500">
-                    {friend.profile?.display_name.charAt(0).toUpperCase()}
+                    {friend.profile?.display_name?.charAt(0).toUpperCase()}
                   </div>
                 )}
                 <div className="ml-3">
