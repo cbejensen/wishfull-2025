@@ -19,10 +19,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
+        console.log('Session:', session);
         setCurrentUser({
           id: session.user.id,
           email: session.user.email!,
-          username: session.user.user_metadata.username || '',
+          display_name: session.user.user_metadata.display_name || '',
           avatar: session.user.user_metadata.avatar_url,
           friends: [],
         });
@@ -36,7 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCurrentUser({
           id: session.user.id,
           email: session.user.email!,
-          username: session.user.user_metadata.username || '',
+          display_name: session.user.user_metadata.display_name || '',
           avatar: session.user.user_metadata.avatar_url,
           friends: [],
         });

@@ -2,7 +2,7 @@
 
 export type User = {
   id: string;
-  name: string;
+  display_name: string;
   email: string;
   avatar?: string;
   friends: string[]; // Array of user IDs
@@ -52,7 +52,7 @@ export type AuthContextType = {
   currentUser: User | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (username: string, email: string, password: string) => Promise<void>;
+  register: (display_name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
 };

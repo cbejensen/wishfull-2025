@@ -1,17 +1,17 @@
+import { Gift, LogOut, Menu, X } from 'lucide-react';
 import React, { useState } from 'react';
-import { Menu, X, Gift, User, LogOut, Plus } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../ui/Button';
 
 interface HeaderProps {
-  onAddWishClick: () => void;
+  // onAddWishClick: () => void;
   onLoginClick: () => void;
   activePage: 'wishlist' | 'friends';
   onNavigate: (page: 'wishlist' | 'friends') => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
-  onAddWishClick, 
+  // onAddWishClick, 
   onLoginClick,
   activePage,
   onNavigate
@@ -87,11 +87,11 @@ const Header: React.FC<HeaderProps> = ({
                         <img
                           className="h-8 w-8 rounded-full object-cover"
                           src={currentUser.avatar}
-                          alt={currentUser.username}
+                          alt={currentUser.display_name}
                         />
                       ) : (
                         <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-500">
-                          {currentUser?.username?.charAt(0).toUpperCase() || 'U'}
+                          {currentUser?.display_name?.charAt(0).toUpperCase() || 'U'}
                         </div>
                       )}
                     </button>
@@ -198,17 +198,17 @@ const Header: React.FC<HeaderProps> = ({
                     <img
                       className="h-10 w-10 rounded-full object-cover"
                       src={currentUser.avatar}
-                      alt={currentUser.username}
+                      alt={currentUser.display_name}
                     />
                   ) : (
                     <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-500">
-                      {currentUser?.username?.charAt(0).toUpperCase() || 'U'}
+                      {currentUser?.display_name?.charAt(0).toUpperCase() || 'U'}
                     </div>
                   )}
                 </div>
                 <div className="ml-3">
                   <div className="text-base font-medium text-gray-800">
-                    {currentUser?.username}
+                    {currentUser?.display_name}
                   </div>
                   <div className="text-sm font-medium text-gray-500">
                     {currentUser?.email}
