@@ -1,4 +1,4 @@
-// Define core types for the application
+export * from './database.types';
 
 export type User = {
   id: string;
