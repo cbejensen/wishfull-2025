@@ -29,7 +29,7 @@ export default function App() {
       <WishlistProvider>
         <div className="min-h-screen grid grid-rows-[auto_1fr]">
           <Header />
-          <main>
+          <main className="bg-gray-50">
             <Outlet />
           </main>
         </div>
