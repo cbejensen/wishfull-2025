@@ -1,9 +1,9 @@
+import { Edit3, ExternalLink, Gift, Link, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
-import { Link, ShoppingCart, Trash2, ExternalLink, Edit3 } from 'lucide-react';
-import { type Wish, WishStatus, type Tag } from '~/types';
+import { WishStatus, type Tag, type Wish } from '~/types';
+import { extractDomain, formatPrice, getPriorityColorClass, getPriorityText, truncateText } from '../../utils/helpers';
 import Button from '../ui/Button';
 import TagBadge from '../ui/TagBadge';
-import { formatPrice, getPriorityText, getPriorityColorClass, truncateText, extractDomain } from '../../utils/helpers';
 
 interface WishCardProps {
   wish: Wish;
@@ -150,19 +150,19 @@ const WishCard: React.FC<WishCardProps> = ({
               variant="secondary"
               size="sm"
               fullWidth
-              leftIcon={<ShoppingCart size={16} />}
+              leftIcon={<Gift size={16} />}
               onClick={() => onPurchase(wish.id)}
             >
-              Purchase
+              Fulfill
             </Button>
           )}
-          <Button
+          {/* <Button
             variant="outline"
             size="sm"
             leftIcon={<Link size={16} />}
           >
             Share
-          </Button>
+          </Button> */}
         </div>
       </div>
     </div>
