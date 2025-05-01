@@ -26,14 +26,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <AuthProvider>
-      <WishlistProvider>
-        <div className="min-h-screen grid grid-rows-[auto_1fr]">
-          <Header />
-          <main className="bg-gray-50">
-            <Outlet />
-          </main>
-        </div>
-      </WishlistProvider>
+      <div className="min-h-screen grid grid-rows-[auto_1fr]">
+        <Header />
+        <main className="bg-gray-50">
+          <Outlet />
+        </main>
+      </div>
     </AuthProvider>
   );
 }

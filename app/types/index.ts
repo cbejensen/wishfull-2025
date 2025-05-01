@@ -29,14 +29,14 @@ export type Wish = {
   price: number;
   priorityLevel: PriorityLevel;
   links: string[];
-  imageUrl?: string;
-  description?: string;
+  imageUrl?: string | null;
+  description?: string | null;
   quantity: number | 'infinity';
   privacyLevel: WishPrivacy;
   status: WishStatus;
   tagIds: string[];
-  purchasedBy?: string;
-  purchaseDate?: string; // ISO date string
+  purchasedBy?: string | null; // User ID of the person who purchased the wish
+  purchaseDate?: string | null; // ISO date string
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
 };
@@ -60,13 +60,14 @@ export type AuthContextType = {
 export type WishlistContextType = {
   wishes: Wish[];
   tags: Tag[];
-  addWish: (wish: Omit<Wish, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  updateWish: (wishId: string, updates: Partial<Wish>) => void;
-  deleteWish: (wishId: string) => void;
+  addWish: ((wish: Omit<Wish, 'id' | 'createdAt' | 'updatedAt'>) => void) | null;
+  updateWish: ((wishId: string, updates: Partial<Wish>) => void) | null;
+  deleteWish: ((wishId: string) => void) | null;
   markAsPurchased: (wishId: string, purchasedBy: string, purchaseDate: string) => void;
-  markAsReceived: (wishId: string, received: boolean) => void;
-  addTag: (name: string, color: string) => void;
-  updateTag: (tagId: string, updates: Partial<Tag>) => void;
-  deleteTag: (tagId: string) => void;
+  markAsReceived: ((wishId: string, received: boolean) => void) | null;
+  addTag: ((name: string, color: string) => void) | null;
+  updateTag: ((tagId: string, updates: Partial<Tag>) => void) | null;
+  deleteTag: ((tagId: string) => void) | null;
   loading: boolean;
+  isAuthUser: boolean;
 };

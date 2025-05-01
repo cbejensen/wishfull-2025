@@ -1,60 +1,57 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import type { Wish, Tag, WishlistContextType, WishStatus } from '~/types';
-import { useAuth } from './AuthContext';
+import { type Wish, type Tag, type WishlistContextType, WishStatus, type Tables, type PriorityLevel, type WishPrivacy } from '~/types';
 import { supabase } from '../lib/supabase';
+import { useAuth } from './AuthContext';
 
 const WishlistContext = createContext<WishlistContextType>({
   wishes: [],
   tags: [],
-  addWish: () => {},
-  updateWish: () => {},
-  deleteWish: () => {},
+  addWish: null,
+  updateWish: null,
+  deleteWish: null,
   markAsPurchased: () => {},
-  markAsReceived: () => {},
-  addTag: () => {},
-  updateTag: () => {},
-  deleteTag: () => {},
+  markAsReceived: null,
+  addTag: null,
+  updateTag: null,
+  deleteTag: null,
   loading: false,
+  isAuthUser: false,
 });
 
-export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const WishlistProvider: React.FC<{ children: React.ReactNode; userId: string }> = ({ children, userId }) => {
   const { currentUser } = useAuth();
+  const isAuthUser = currentUser?.id === userId;
   const [wishes, setWishes] = useState<Wish[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load wishes and tags when user is authenticated
+  // Load wishes and tags when userId changes
   useEffect(() => {
-    if (currentUser) {
+    if (userId) {
       loadWishesAndTags();
-      
+
       // Subscribe to real-time updates
       const wishesSubscription = supabase
         .channel('wishes_channel')
-        .on('postgres_changes', { 
-          event: '*', 
-          schema: 'public', 
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
           table: 'wishes',
-          // delete events are not filterable!
-          // https://supabase.com/docs/guides/realtime/postgres-changes#delete-events-are-not-filterable
-          filter: `user_id=eq.${currentUser.id}`
+          filter: `user_id=eq.${userId}`,
         }, payload => {
-          console.log(payload)
           if (payload.eventType === 'INSERT') {
-            setWishes(prev => [...prev, transformWishFromDB(payload.new)]);
+            setWishes(prev => [...prev, transformWishFromDB(payload.new as Tables<'wishes'>)]);
           } else if (payload.eventType === 'UPDATE') {
-            setWishes(prev => prev.map(wish => 
-              wish.id === payload.new.id ? transformWishFromDB(payload.new) : wish
+            setWishes(prev => prev.map(wish =>
+              wish.id === payload.new.id ? transformWishFromDB(payload.new as Tables<'wishes'>) : wish
             ));
           } else if (payload.eventType === 'DELETE') {
             setWishes(prev => prev.filter(wish => wish.id !== payload.old.id));
           }
         })
-          // separate listener for delete events since they are not filterable
-          // https://supabase.com/docs/guides/realtime/postgres-changes#delete-events-are-not-filterable
-        .on('postgres_changes', { 
-          event: 'DELETE', 
-          schema: 'public', 
+        .on('postgres_changes', {
+          event: 'DELETE',
+          schema: 'public',
           table: 'wishes',
         }, payload => {
           setWishes(prev => prev.filter(wish => wish.id !== payload.old.id));
@@ -63,17 +60,17 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       const tagsSubscription = supabase
         .channel('tags_channel')
-        .on('postgres_changes', { 
-          event: '*', 
-          schema: 'public', 
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
           table: 'tags',
-          filter: `user_id=eq.${currentUser.id}`
+          filter: `user_id=eq.${userId}`,
         }, payload => {
           if (payload.eventType === 'INSERT') {
-            setTags(prev => [...prev, transformTagFromDB(payload.new)]);
+            setTags(prev => [...prev, transformTagFromDB(payload.new as Tables<'tags'>)]);
           } else if (payload.eventType === 'UPDATE') {
-            setTags(prev => prev.map(tag => 
-              tag.id === payload.new.id ? transformTagFromDB(payload.new) : tag
+            setTags(prev => prev.map(tag =>
+              tag.id === payload.new.id ? transformTagFromDB(payload.new as Tables<'tags'>) : tag
             ));
           } else if (payload.eventType === 'DELETE') {
             setTags(prev => prev.filter(tag => tag.id !== payload.old.id));
@@ -90,19 +87,19 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setTags([]);
       setLoading(false);
     }
-  }, [currentUser]);
+  }, [userId]);
 
   const loadWishesAndTags = async () => {
-    if (!currentUser) return;
+    if (!userId) return;
 
     try {
       setLoading(true);
-      
+
       // Load wishes
       const { data: wishesData, error: wishesError } = await supabase
         .from('wishes')
         .select('*')
-        .eq('user_id', currentUser.id)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (wishesError) throw wishesError;
@@ -111,7 +108,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const { data: tagsData, error: tagsError } = await supabase
         .from('tags')
         .select('*')
-        .eq('user_id', currentUser.id)
+        .eq('user_id', userId)
         .order('name');
 
       if (tagsError) throw tagsError;
@@ -126,18 +123,18 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   // Transform database wish to frontend wish
-  const transformWishFromDB = (dbWish: any): Wish => ({
+  const transformWishFromDB = (dbWish: Tables<'wishes'>): Wish => ({
     id: dbWish.id,
     userId: dbWish.user_id,
     name: dbWish.name,
     price: dbWish.price,
-    priorityLevel: dbWish.priority_level,
+    priorityLevel: dbWish.priority_level as PriorityLevel,
     links: dbWish.links || [],
     imageUrl: dbWish.image_url,
     description: dbWish.description,
-    quantity: dbWish.quantity,
-    privacyLevel: dbWish.privacy_level,
-    status: dbWish.status,
+    quantity: dbWish.quantity === 'infinity' ? Infinity : parseInt(dbWish.quantity, 10),
+    privacyLevel: dbWish.privacy_level as WishPrivacy,
+    status: dbWish.status as WishStatus,
     tagIds: dbWish.tag_ids || [],
     purchasedBy: dbWish.purchased_by,
     purchaseDate: dbWish.purchase_date,
@@ -146,8 +143,8 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   });
 
   // Transform frontend wish to database wish
-  const transformWishToDB = (wish: Partial<Wish>) => ({
-    user_id: currentUser?.id,
+  const transformWishToDB = (wish: Partial<Wish>): Tables<'wishes'> => ({
+    user_id: userId,
     name: wish.name,
     price: wish.price,
     priority_level: wish.priorityLevel,
@@ -163,7 +160,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   });
 
   // Transform database tag to frontend tag
-  const transformTagFromDB = (dbTag: any): Tag => ({
+  const transformTagFromDB = (dbTag: Tables<'tags'>): Tag => ({
     id: dbTag.id,
     userId: dbTag.user_id,
     name: dbTag.name,
@@ -171,15 +168,15 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   });
 
   // Transform frontend tag to database tag
-  const transformTagToDB = (tag: Partial<Tag>) => ({
-    user_id: currentUser?.id,
+  const transformTagToDB = (tag: Partial<Tag>): Tables<'tags'> => ({
+    user_id: userId,
     name: tag.name,
     color: tag.color,
   });
 
   // Add a new wish
   const addWish = async (wishData: Omit<Wish, 'id' | 'createdAt' | 'updatedAt'>) => {
-    if (!currentUser) return;
+    if (!userId) return;
 
     try {
       const { data, error } = await supabase
@@ -199,14 +196,14 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Update an existing wish
   const updateWish = async (wishId: string, updates: Partial<Wish>) => {
-    if (!currentUser) return;
+    if (!userId) return;
 
     try {
       const { error } = await supabase
         .from('wishes')
         .update(transformWishToDB(updates))
         .eq('id', wishId)
-        .eq('user_id', currentUser.id);
+        .eq('user_id', userId);
 
       if (error) throw error;
     } catch (error) {
@@ -217,14 +214,14 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Delete a wish
   const deleteWish = async (wishId: string) => {
-    if (!currentUser) return;
+    if (!userId) return;
 
     try {
       const { error } = await supabase
         .from('wishes')
         .delete()
         .eq('id', wishId)
-        .eq('user_id', currentUser.id);
+        .eq('user_id', userId);
 
       if (error) throw error;
     } catch (error) {
@@ -235,7 +232,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Mark a wish as purchased
   const markAsPurchased = async (wishId: string, purchasedBy: string, purchaseDate: string) => {
-    if (!currentUser) return;
+    if (!userId) return;
 
     try {
       const { error } = await supabase
@@ -246,7 +243,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           purchase_date: purchaseDate,
         })
         .eq('id', wishId)
-        .eq('user_id', currentUser.id);
+        .eq('user_id', userId);
 
       if (error) throw error;
     } catch (error) {
@@ -257,7 +254,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Mark a wish as received or not received
   const markAsReceived = async (wishId: string, received: boolean) => {
-    if (!currentUser) return;
+    if (!userId) return;
 
     try {
       const updates = received
@@ -272,7 +269,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .from('wishes')
         .update(updates)
         .eq('id', wishId)
-        .eq('user_id', currentUser.id);
+        .eq('user_id', userId);
 
       if (error) throw error;
     } catch (error) {
@@ -283,7 +280,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Add a new tag
   const addTag = async (name: string, color: string) => {
-    if (!currentUser) return;
+    if (!userId) return;
 
     try {
       const { data, error } = await supabase
@@ -303,14 +300,14 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Update an existing tag
   const updateTag = async (tagId: string, updates: Partial<Tag>) => {
-    if (!currentUser) return;
+    if (!userId) return;
 
     try {
       const { error } = await supabase
         .from('tags')
         .update(transformTagToDB(updates))
         .eq('id', tagId)
-        .eq('user_id', currentUser.id);
+        .eq('user_id', userId);
 
       if (error) throw error;
     } catch (error) {
@@ -321,26 +318,26 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Delete a tag
   const deleteTag = async (tagId: string) => {
-    if (!currentUser) return;
+    if (!userId) return;
 
     try {
       // First, remove the tag from all wishes that have it
       const { data: wishes, error: wishesError } = await supabase
         .from('wishes')
         .select('id, tag_ids')
-        .eq('user_id', currentUser.id)
+        .eq('user_id', userId)
         .contains('tag_ids', [tagId]);
 
       if (wishesError) throw wishesError;
 
       // Update wishes that contain this tag
       for (const wish of wishes) {
-        const updatedTagIds = wish.tag_ids.filter((id: string) => id !== tagId);
+        const updatedTagIds = wish.tag_ids?.filter((id: string) => id !== tagId);
         const { error } = await supabase
           .from('wishes')
           .update({ tag_ids: updatedTagIds })
           .eq('id', wish.id)
-          .eq('user_id', currentUser.id);
+          .eq('user_id', userId);
 
         if (error) throw error;
       }
@@ -350,7 +347,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .from('tags')
         .delete()
         .eq('id', tagId)
-        .eq('user_id', currentUser.id);
+        .eq('user_id', userId);
 
       if (deleteError) throw deleteError;
     } catch (error) {
@@ -362,15 +359,16 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const value = {
     wishes,
     tags,
-    addWish,
-    updateWish,
-    deleteWish,
+    addWish: isAuthUser ? addWish : null,
+    updateWish: isAuthUser ? updateWish : null,
+    deleteWish: isAuthUser ? deleteWish : null,
     markAsPurchased,
-    markAsReceived,
-    addTag,
-    updateTag,
-    deleteTag,
+    markAsReceived: isAuthUser ? markAsReceived : null,
+    addTag: isAuthUser ? addTag : null,
+    updateTag: isAuthUser ? updateTag : null,
+    deleteTag: isAuthUser ? deleteTag : null,
     loading,
+    isAuthUser,
   };
 
   return <WishlistContext.Provider value={value}>{children}</WishlistContext.Provider>;
