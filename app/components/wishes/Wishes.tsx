@@ -9,27 +9,20 @@ import { useState } from "react";
 import { useAuth } from "~/context/AuthContext";
 import { useWishlist } from "~/context/WishlistContext";
 import { WishStatus, type Wish } from "~/types";
+import { AddEditWishModal } from "./AddEditWishModal";
 
 export function Wishes() {
-  const { currentUser } = useAuth();
   const {
     wishes,
     tags,
-    addWish,
-    updateWish,
     deleteWish,
     markAsPurchased,
-    addTag,
-    updateTag,
-    deleteTag,
     isAuthUser,
   } = useWishlist();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [showAddWishModal, setShowAddWishModal] = useState(false);
-  const [showManageTagsModal, setShowManageTagsModal] = useState(false);
 
   // UI state
-  const [wishBeingEdited, setWishBeingEdited] = useState<Wish | null>(null);
+  const [wishBeingEdited, setWishBeingEdited] = useState<Partial<Wish> | true | null>(null);
   const [wishBeingPurchased, setWishBeingPurchased] = useState<Wish | null>(
     null
   );
@@ -37,38 +30,6 @@ export function Wishes() {
   // Filtering
   const [activeFilter, setActiveFilter] = useState<WishStatus | "all">("all");
   const [activeTagFilter, setActiveTagFilter] = useState<string | null>(null);
-
-  // Handle adding a new wish
-  const handleAddWish = addWish
-    ? async (wishData: Partial<Wish>) => {
-        if (!currentUser) return;
-
-        try {
-          await addWish({
-            ...wishData,
-            userId: currentUser.id,
-            status: WishStatus.OPEN,
-          } as Omit<Wish, "id" | "createdAt" | "updatedAt">);
-          setShowAddWishModal(false);
-        } catch (error) {
-          console.error("Failed to add wish:", error);
-        }
-      }
-    : null;
-
-  // Handle updating a wish
-  const handleUpdateWish = updateWish
-    ? async (wishData: Partial<Wish>) => {
-        if (wishBeingEdited?.id) {
-          try {
-            await updateWish(wishBeingEdited.id, wishData);
-            setWishBeingEdited(null);
-          } catch (error) {
-            console.error("Failed to update wish:", error);
-          }
-        }
-      }
-    : null;
 
   // Handle wish purchase
   const handlePurchase = async (
@@ -266,7 +227,7 @@ export function Wishes() {
               isAuthUser ? (
                 <Button
                   variant="primary"
-                  onClick={() => setShowAddWishModal(true)}
+                  onClick={() => setWishBeingEdited(true)}
                 >
                   Add Your First Wish
                 </Button>
@@ -303,40 +264,11 @@ export function Wishes() {
         </div>
       )}
 
-      {/* Add/Edit Wish Modal */}
-      {handleAddWish ? (
-        <Modal
-          isOpen={showAddWishModal}
-          onClose={() => setShowAddWishModal(false)}
-          title="Add New Wish"
-          size="lg"
-        >
-          <AddEditWishForm
-            tags={tags}
-            onSubmit={handleAddWish}
-            onCancel={() => setShowAddWishModal(false)}
-          />
-        </Modal>
-      ) : null}
-
-      {/* Edit Wish Modal */}
-      {handleUpdateWish ? (
-        <Modal
-          isOpen={!!wishBeingEdited}
-          onClose={() => setWishBeingEdited(null)}
-          title="Edit Wish"
-          size="lg"
-        >
-          {wishBeingEdited && (
-            <AddEditWishForm
-              initialData={wishBeingEdited}
-              tags={tags}
-              onSubmit={handleUpdateWish}
-              onCancel={() => setWishBeingEdited(null)}
-            />
-          )}
-        </Modal>
-      ) : null}
+      <AddEditWishModal
+        initialData={typeof wishBeingEdited === "object" ? wishBeingEdited : null}
+        isOpen={!!wishBeingEdited}
+        onClose={() => setWishBeingEdited(null)}
+      />
 
       {/* Purchase Wish Modal */}
       <Modal
@@ -352,24 +284,6 @@ export function Wishes() {
           />
         )}
       </Modal>
-
-      {/* Manage Tags Modal */}
-      {addTag && updateTag && deleteTag ? (
-        <Modal
-          isOpen={showManageTagsModal}
-          onClose={() => setShowManageTagsModal(false)}
-          title="Manage Tags"
-          size="lg"
-        >
-          <TagManagementForm
-            tags={tags}
-            onAddTag={addTag}
-            onUpdateTag={updateTag}
-            onDeleteTag={deleteTag}
-            onClose={() => setShowManageTagsModal(false)}
-          />
-        </Modal>
-      ) : null}
     </>
   );
 }

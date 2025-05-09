@@ -7,7 +7,7 @@ import Button from '../ui/Button';
 import TagBadge from '../ui/TagBadge';
 
 interface AddEditWishFormProps {
-  initialData?: Partial<Wish>;
+  initialData?: Partial<Wish> | null;
   tags: Tag[];
   onSubmit: (data: Partial<Wish>) => void;
   onCancel: () => void;
