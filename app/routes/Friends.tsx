@@ -6,30 +6,34 @@ import { supabase } from "../lib/supabase";
 import type { Tables } from "~/types";
 import { Loading } from "~/components/ui/Loading";
 
-export type FriendWithProfile = Tables<"friends"> & {
-  profile: Pick<Tables<"profiles">, "id" | "display_name" | "avatar_url">;
+export type FriendWithProfiles = Tables<"friends"> & {
+  source: Pick<Tables<"profiles">, "id" | "display_name" | "avatar_url">;
+  target: Pick<Tables<"profiles">, "id" | "display_name" | "avatar_url">;
 };
 
 export default function Friends() {
   const { currentUser } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [profiles, setProfiles] = useState<Tables<"profiles">[]>([]);
-  const [friends, setFriends] = useState<FriendWithProfile[]>([]);
+  const [friends, setFriends] = useState<FriendWithProfiles[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!currentUser) return;
-
-    const loadFriendsAndUsers = async () => {
+    const loadFriends = async () => {
       try {
         setLoading(true);
-
         const { data: friendsData, error: friendsError } = await supabase
           .from("friends")
           .select(
             `
             *,
-            profile:profiles!friend_id (
+            source:profiles!user_id (
+              id,
+              display_name,
+              avatar_url
+            ),
+            target:profiles!friend_id (
               id,
               display_name,
               avatar_url
@@ -41,16 +45,7 @@ export default function Friends() {
 
         if (friendsError) throw friendsError;
 
-        const { data: profileData, error: usersError } = await supabase
-          .from("profiles")
-          .select("*")
-          .neq("id", currentUser.id)
-          .order("display_name");
-
-        if (usersError) throw usersError;
-
         setFriends(friendsData || []);
-        setProfiles(profileData || []);
       } catch (error) {
         console.error("Error loading friends and users:", error);
       } finally {
@@ -58,12 +53,35 @@ export default function Friends() {
       }
     };
 
-    loadFriendsAndUsers();
+    loadFriends();
   }, [currentUser]);
 
-  const filteredUsers = profiles.filter(
+  useEffect(() => {
+    if (searchQuery.length < 3 || !currentUser) {
+      setProfiles([])
+      return;
+    }
+    const loadProfiles = async () => { 
+      const { data: profileData, error: profilesError } = await supabase
+      .from("profiles")
+      .select("*")
+      .neq("id", currentUser.id)
+      .order("display_name")
+      .textSearch(
+        "display_name",
+        searchQuery,
+      );
+      if (profilesError) {
+        console.error("Error loading users:", profilesError);
+        return;
+      }
+      setProfiles(profileData || []);
+    }
+    loadProfiles()
+  }, [currentUser, searchQuery])
+
+  const nonFriends = profiles.filter(
     (profile) =>
-      profile.display_name.toLowerCase().includes(searchQuery.toLowerCase()) &&
       !friends.some(
         (f) =>
           (f.user_id === profile.id && f.friend_id === currentUser?.id) ||
@@ -88,7 +106,12 @@ export default function Friends() {
         .select(
           `
           *,
-          profile:profiles!friend_id (
+          source:profiles!user_id (
+            id,
+            display_name,
+            avatar_url
+          ),
+          target:profiles!friend_id (
             id,
             display_name,
             avatar_url
@@ -158,7 +181,7 @@ export default function Friends() {
       <FindFriends
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
-        filteredUsers={filteredUsers}
+        filteredUsers={nonFriends}
         handleAddFriend={handleAddFriend}
       />
     </div>

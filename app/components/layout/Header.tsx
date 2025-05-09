@@ -1,7 +1,6 @@
 import { Gift, LogOut, Menu, X } from "lucide-react";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import Button from "../ui/Button";
 import { Link, NavLink, useLocation } from "react-router";
 
 export function Header() {
@@ -9,7 +8,6 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const { pathname } = useLocation();
-  console.log({ pathname });
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-30">

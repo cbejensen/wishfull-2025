@@ -1,10 +1,11 @@
 import React from 'react';
+import { Link } from 'react-router';
 import { Users, UserX, Check, X } from 'lucide-react';
 import Button from '../ui/Button';
-import type { FriendWithProfile } from '../../routes/Friends';
+import type { FriendWithProfiles } from '../../routes/Friends';
 
 interface FriendsListProps {
-  friends: FriendWithProfile[];
+  friends: FriendWithProfiles[];
   currentUser: { id: string } | null;
   handleRespondToRequest: (friendId: string, accept: boolean) => void;
   handleRemoveFriend: (friendId: string) => void;
@@ -16,7 +17,7 @@ export const FriendsList: React.FC<FriendsListProps> = ({
   handleRespondToRequest,
   handleRemoveFriend,
 }) => {
-  // Sort friends: pending requests for the current user appear first
+  // Sort friends: pending requests where the current user is the target/receiver of the request appear first
   const sortedFriends = [...friends].sort((a, b) => {
     if (a.status === 'pending' && a.friend_id === currentUser?.id) return -1;
     if (b.status === 'pending' && b.friend_id === currentUser?.id) return 1;
@@ -29,68 +30,72 @@ export const FriendsList: React.FC<FriendsListProps> = ({
 
       {sortedFriends.length > 0 ? (
         <ul className="divide-y divide-gray-200">
-          {sortedFriends.map((friend) => (
-            <li key={friend.id} className="py-4 flex items-center justify-between">
-              <div className="flex items-center">
-                {friend.profile?.avatar_url ? (
-                  <img
-                    src={friend.profile.avatar_url}
-                    alt={friend.profile.display_name || ''}
-                    className="h-10 w-10 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-500">
-                    {friend.profile?.display_name?.charAt(0).toUpperCase()}
+          {sortedFriends.map((friend) => {
+            const profile = friend.source.id === currentUser?.id ? friend.target : friend.source;
+            return (
+              <li key={friend.id} className="py-4 flex items-center justify-between">
+                <div className="flex items-center">
+                  {profile?.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt={profile.display_name || ''}
+                      className="h-10 w-10 rounded-full object-cover" />
+                  ) : (
+                    <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-500">
+                      {profile?.display_name?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900">
+                      <Link to={`/users/${profile?.id}`} className="text-blue-500 hover:underline">
+                        {profile?.display_name}
+                      </Link>
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {friend.status === 'pending' && friend.user_id === currentUser?.id
+                        ? 'Request sent'
+                        : friend.status === 'pending'
+                          ? 'Request received'
+                          : friend.status}
+                    </p>
                   </div>
-                )}
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">
-                    {friend.profile?.display_name}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {friend.status === 'pending' && friend.user_id === currentUser?.id
-                      ? 'Request sent'
-                      : friend.status === 'pending'
-                      ? 'Request received'
-                      : friend.status}
-                  </p>
                 </div>
-              </div>
-              
-              <div className="flex space-x-2">
-                {friend.status === 'pending' && friend.friend_id === currentUser?.id && (
-                  <>
+
+                <div className="flex space-x-2">
+                  {friend.status === 'pending' && friend.friend_id === currentUser?.id && (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        leftIcon={<Check size={16} />}
+                        onClick={() => handleRespondToRequest(friend.id, true)}
+                      >
+                        Accept
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        leftIcon={<X size={16} />}
+                        onClick={() => handleRespondToRequest(friend.id, false)}
+                      >
+                        Reject
+                      </Button>
+                    </>
+                  )}
+                  {friend.status === 'accepted' && (
                     <Button
                       variant="outline"
                       size="sm"
-                      leftIcon={<Check size={16} />}
-                      onClick={() => handleRespondToRequest(friend.id, true)}
+                      leftIcon={<UserX size={16} />}
+                      onClick={() => handleRemoveFriend(friend.id)}
                     >
-                      Accept
+                      Remove
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      leftIcon={<X size={16} />}
-                      onClick={() => handleRespondToRequest(friend.id, false)}
-                    >
-                      Reject
-                    </Button>
-                  </>
-                )}
-                {friend.status === 'accepted' && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    leftIcon={<UserX size={16} />}
-                    onClick={() => handleRemoveFriend(friend.id)}
-                  >
-                    Remove
-                  </Button>
-                )}
-              </div>
-            </li>
-          ))}
+                  )}
+                </div>
+              </li>
+            );
+          })}
         </ul>
       ) : (
         <div className="text-center py-12">
