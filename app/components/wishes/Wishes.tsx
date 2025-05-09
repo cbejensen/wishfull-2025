@@ -1,28 +1,22 @@
-import { Filter, Gift, Grid, List, TagIcon } from "lucide-react";
+import { Filter, Gift, Grid, List } from "lucide-react";
 import Button from "../ui/Button";
 import Modal from "../ui/Modal";
-import AddEditWishForm from "../wishes/AddEditWishForm";
 import PurchaseWishForm from "../wishes/PurchaseWishForm";
-import TagManagementForm from "../wishes/TagManagementForm";
 import WishCard from "../wishes/WishCard";
 import { useState } from "react";
-import { useAuth } from "~/context/AuthContext";
 import { useWishlist } from "~/context/WishlistContext";
 import { WishStatus, type Wish } from "~/types";
 import { AddEditWishModal } from "./AddEditWishModal";
 
 export function Wishes() {
-  const {
-    wishes,
-    tags,
-    deleteWish,
-    markAsPurchased,
-    isAuthUser,
-  } = useWishlist();
+  const { wishes, tags, deleteWish, markAsPurchased, isAuthUser } =
+    useWishlist();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   // UI state
-  const [wishBeingEdited, setWishBeingEdited] = useState<Partial<Wish> | true | null>(null);
+  const [wishBeingEdited, setWishBeingEdited] = useState<
+    Partial<Wish> | true | null
+  >(null);
   const [wishBeingPurchased, setWishBeingPurchased] = useState<Wish | null>(
     null
   );
@@ -252,12 +246,22 @@ export function Wishes() {
               key={wish.id}
               wish={wish}
               tags={tags}
-              onEdit={(id) =>
-                setWishBeingEdited(wishes.find((w) => w.id === id) || null)
+              onEdit={
+                isAuthUser
+                  ? (id) =>
+                      setWishBeingEdited(
+                        wishes.find((w) => w.id === id) || null
+                      )
+                  : null
               }
               onDelete={handleDeleteWish}
-              onPurchase={(id) =>
-                setWishBeingPurchased(wishes.find((w) => w.id === id) || null)
+              onPurchase={
+                isAuthUser
+                  ? null
+                  : (id) =>
+                      setWishBeingPurchased(
+                        wishes.find((w) => w.id === id) || null
+                      )
               }
             />
           ))}
@@ -265,7 +269,9 @@ export function Wishes() {
       )}
 
       <AddEditWishModal
-        initialData={typeof wishBeingEdited === "object" ? wishBeingEdited : null}
+        initialData={
+          typeof wishBeingEdited === "object" ? wishBeingEdited : null
+        }
         isOpen={!!wishBeingEdited}
         onClose={() => setWishBeingEdited(null)}
       />
