@@ -26,20 +26,12 @@ const WishCard: React.FC<WishCardProps> = ({
   onDelete,
   onPurchase,
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
   // Get tags for this wish
   const wishTags = tags.filter((tag) => wish.tagIds.includes(tag.id));
 
   // Function to render purchase status badge
   const renderStatusBadge = () => {
     switch (wish.status) {
-      case WishStatus.PURCHASED:
-        return (
-          <div className="px-2 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-medium">
-            Purchased
-          </div>
-        );
       case WishStatus.FULFILLED:
         return (
           <div className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
@@ -52,11 +44,7 @@ const WishCard: React.FC<WishCardProps> = ({
   };
 
   return (
-    <div
-      className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg">
       {/* Image container with priority badge */}
       <div className="relative h-48 bg-gray-200">
         {wish.imageUrl ? (
@@ -85,9 +73,7 @@ const WishCard: React.FC<WishCardProps> = ({
 
         {/* Action buttons on hover */}
         <div
-          className={`absolute top-2 right-2 flex space-x-1 transition-opacity duration-200 ${
-            isHovered ? "opacity-100" : "opacity-0"
-          }`}
+          className={`absolute top-2 right-2 flex space-x-1 transition-opacity duration-200`}
         >
           {onEdit ? (
             <button
