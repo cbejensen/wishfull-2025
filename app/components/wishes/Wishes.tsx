@@ -22,7 +22,7 @@ export function Wishes() {
   );
 
   // Filtering
-  const [activeFilter, setActiveFilter] = useState<WishStatus | "all">("all");
+  const [activeFilter, setActiveFilter] = useState<WishStatus | "all">(WishStatus.OPEN);
   const [activeTagFilter, setActiveTagFilter] = useState<string | null>(null);
 
   // Handle wish purchase
@@ -136,17 +136,6 @@ export function Wishes() {
                 onClick={() => setActiveFilter(WishStatus.OPEN)}
               >
                 Open
-              </button>
-              <button
-                type="button"
-                className={`px-3 py-1 text-sm font-medium ${
-                  activeFilter === WishStatus.PURCHASED
-                    ? "bg-purple-600 text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-50"
-                } border-t border-b border-gray-300`}
-                onClick={() => setActiveFilter(WishStatus.PURCHASED)}
-              >
-                Purchased
               </button>
               <button
                 type="button"

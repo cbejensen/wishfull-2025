@@ -18,7 +18,6 @@ export enum WishPrivacy {
 
 export enum WishStatus {
   OPEN = 'open',
-  PURCHASED = 'purchased',
   FULFILLED = 'fulfilled',
 }
 
